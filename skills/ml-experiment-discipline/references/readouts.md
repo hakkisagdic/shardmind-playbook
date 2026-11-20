@@ -3,6 +3,7 @@
 ## Format
 - Verdict in one line: promoted, dropped, kept playing, borderline.
 - The numbers: effect, interval, sample size, seeds, window.
+- Validity checks passed (which: sample ratio, void rate and flag rate per arm).
 - The rule that produced the verdict (quote the record's rule by id).
 - What it does not show.
 - What happens next.

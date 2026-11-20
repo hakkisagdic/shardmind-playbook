@@ -9,7 +9,8 @@ A worked example on an invented scenario, with round illustrative numbers. A tea
 
 ## Unit and metric
 - **The unit is the player, not the game.** Games by one person are correlated; treating them as independent makes the interval too narrow. Compute each player's share over their qualifying games and average those shares, so one keen player cannot dominate.
-- Interval: bootstrap over players, percentile 95%, analysis code frozen and committed before any data.
+- Interval: bootstrap over players, percentile 95%, analysis code frozen and committed before any data (see the next point when players are few).
+- Count the units behind every interval and print the count beside it. With fewer than a few dozen units an arm, a normal interval and a percentile bootstrap are too narrow: use Student's t with the units' degrees of freedom, or the design's own randomisation test (shuffle or sign-flip the assignment) when assignment was drawn at random. A randomisation test has a floor under its p-value: with three units an arm there are only 20 possible assignments, so the smallest two-sided p is 0.10 and nothing can be significant at 5%; with n sign-flip pairs it is 2/2^n. Compute that floor before writing the record; at least four units an arm (70 assignments, floor about 0.03) or six pairs are needed for a two-sided 5% test. With Student's t on very few units, only a very large effect is detectable; say so in the power line instead of running it.
 - Secondary measures (reported, not decisive): the same players against a simple scripted opponent, results by experience level, results by game number (learning, novelty), results against the agent's thinking time.
 
 ## Decision table (written before data)

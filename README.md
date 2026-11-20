@@ -15,8 +15,9 @@ The approach is public; the tooling stays private. This plugin holds method only
 
 ## What is inside
 
-- `skills/autonomous-project-lead`: how one lead agent runs a long project on little human time. State files, a judgement-only loop, autonomy and escalation classes, delegation to narrow roles, a merge queue, shared-machine etiquette, reporting, resumability and corrections. Details in `references/`, including fifty incident rules (what went wrong, the rule, the reason).
-- `skills/ml-experiment-discipline`: pre-registered experiments, window rules, A/A tests, controls, a sequential promotion gate, teacher ladders and distillation, relabelling, roll-out labels, shared compute budgets and honest readouts. Details in `references/`.
+- `skills/autonomous-project-lead`: how one lead agent runs a long project on little human time. State files, a judgement-only loop, autonomy and escalation classes, delegation to narrow roles, a merge queue, shared-machine etiquette, reporting, resumability and corrections. Details in `references/`, including fifty-seven incident rules (what went wrong, the rule, the reason).
+- `skills/ml-experiment-discipline`: pre-registered experiments, window rules, A/A tests, sample-ratio checks, self-play populations, controls, a sequential promotion gate, teacher ladders and distillation, relabelling, roll-out labels, shared compute budgets and honest readouts. Details in `references/`.
+- `evals/`: three scenarios per skill (setup, prompt, expected behaviour), to be run with and without the skill. They exist; the baseline has not been measured yet.
 - `commands/`: `/status-page`, `/tick`, `/diary`, `/preregister`, `/lesson`.
 - `skills/autonomous-project-lead/templates/`: skeletons for the status page, open items, lessons, diary, questions queue and resume note.
 - `skills/ml-experiment-discipline/templates/`: an experiment record (JSON) with its decision table.

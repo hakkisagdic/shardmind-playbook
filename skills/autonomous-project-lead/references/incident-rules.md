@@ -2,6 +2,19 @@
 
 Each entry is a kind of incident met in one long autonomous project and on the shared machine it ran on, generalised. Format: **what went wrong**, then **rule**, then the **reason** it holds. Some incidents were the lead's own, some other agents', some the machine's. Treat the list as a checklist when you design scripts, schedules and briefs, not as a universal law. Any number in it is a round illustration.
 
+Retire rules into mechanisms, never by deleting them. When a script, hook or permission refuses the bad action, an agent may propose moving the rule to the appendix "Carried by a mechanism" with the mechanism's name and its test; the owner approves. Rules that guard class-three actions, stopping processes and deletion are never dropped, only moved once a mechanism carries them. Review the list every quarter: a rule with no mechanism and no incident for months is luck or dead weight; bring the question to the owner, who alone removes a safety rule.
+
+## Contents
+
+- A. Schedules, watchers and things that silently stop
+- B. Machine, memory, disk, processes
+- C. Merges, branches, worktrees
+- D. Accounts, quotas, agents
+- E. Correctness of the work itself
+- F. Method
+- G. Later additions
+- H. Carried by a mechanism
+
 ## A. Schedules, watchers and things that silently stop
 
 **1. The hourly check vanished and nobody noticed for hours.**
@@ -42,6 +55,8 @@ Reason: preventive interruptions have a cost; check whether the risk is real fir
 **8. Reminders repeated because a watcher was forgotten.**
 Items awaiting approval were re-announced to the owner because the watcher that notices new items was not re-created after an event.
 Rule: notify only on new items; the watcher is a background wait that wakes on a new item and is re-created after every event it handled. Whatever needs the owner goes to whatever channel they asked for (if they set one up), short, saying plainly when it needs them at the computer. Chat text alone may not be seen.
+The scan needs a watcher too: it writes a heartbeat each sweep, and something independent of it (the scheduler, another machine) alerts when the heartbeat is old. Count how many alerts needed an action; if most did not, fix or remove them before adding new ones. See also rule 55.
+
 ## B. Machine, memory, disk, processes
 
 **9. A bulk deploy restarted several memory-hungry processes at once and nearly exhausted memory.**
@@ -187,7 +202,7 @@ Rule: register every experiment with its reading time and have a script read it;
 
 **46. Repeated looks inflated false positives.**
 Fixed-size tests repeated at every look make the true error rate exceed its label.
-Rule: use a sequential test with boundaries made for repeated looks, and raise the bar with the number of candidates tried against the same incumbent.
+Rule: use a sequential test with boundaries made for repeated looks, and give the stream of candidates tried against one incumbent an error budget that adds up (see the ML skill, `references/gates.md`); testing the k-th candidate at alpha/k does not hold the family at alpha.
 
 **47. The promotion gate promoted a copy of the incumbent.**
 Rule: A/A probes; see the ML skill.
@@ -197,3 +212,44 @@ Rule: A/A probes; see the ML skill.
 **49. State the success bar before building.** Register a value test for a new tool before its code exists: the level it must reach, in what budget, or the work stops.
 
 **50. Tools need tests too.** Small infrastructure bugs (state in memory, a freeze on a canary, a dropped session, a default timeout under load) cost hours each and looked like training problems. Each fix: a few lines and a test. Give test timeouts headroom for load.
+
+## G. Later additions
+
+**51. An agent bypassed a guard that refused its commit.**
+Rule: a refusing hook or check is fixed at its cause; no skip flag, no alternative hooks path, no environment switch. The line goes in every brief.
+Reason: a hook runs more checks than the one that fired.
+
+**52. A long job starved for hours and nobody saw.**
+Its watcher logged only "started" and "finished".
+Rule: write the expected rate (units per second or CPU-hours) when a long job starts; the watcher compares progress with it; under half in the first hour is an incident. Choose how far to background a job from measured load, and decide before the start whether the job can be reprioritised without a restart.
+Reason: a job that is slow looks the same as a job that is running until someone compares it with a number.
+
+**53. A memory peak was estimated from the easy part of the input.**
+The job was killed mid-window and slowed everyone.
+Rule: on a shared machine, measure a heavy job's peak in a short dry run on its heaviest piece (longest input, largest batch), set a hard cap, and only then enter a window someone else opened.
+Reason: the peak is set by the worst piece, not the average one.
+
+**54. A measurement window opened with more consumers than the budget counted.**
+Rule: when a window opens, count every consumer of the shared device from scratch; stop what exceeds the budget before the window, and read the response time once in the first half hour.
+Reason: a budget written earlier does not know what started since.
+
+**55. Known warnings woke the owner at night.**
+Rule: a watcher acknowledges known items instead of skipping them; a silence list holds each known item with a reason and an expiry; an alert that returns under a new identity after each acknowledgement is a bug.
+Reason: a silence with no expiry hides the day the warning becomes real.
+
+**56. A branch needed by a fixed outside deadline waited in the queue behind load.**
+Rule: a branch tied to an outside deadline goes to the front, and the party waiting gets the fallback ("take it from the branch") at once. Never edit the head of the queue while its merge runs.
+Reason: the queue's order is about load, the deadline is about someone else's clock.
+
+**57. A public text distilled from private sources carried results and near-translations.**
+The author's pattern scan said clean.
+Rule: write with invented scenarios and round, plainly illustrative numbers; before publishing, an independent reviewer reads the sources as well as the text (a pattern scan catches names and paths, not paraphrase, numbers or another tool's design); set the repository's identity before the first commit; timing and name are the owner's word.
+Reason: the author reads the text for what it means to them; a reviewer with the sources reads it for what it gives away.
+
+## H. Carried by a mechanism
+
+Rules a script, hook or permission now refuses to let anyone break. Each line: the rule number, the mechanism's name, the test that shows it works. Empty until the first rule is retired.
+
+| Rule | Mechanism | Test |
+|---|---|---|
+| | | |

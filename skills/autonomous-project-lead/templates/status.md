@@ -5,9 +5,9 @@ Goal: <one sentence>
 Date: <YYYY-MM-DD>   Phase: <name>
 
 ## Running jobs
-| Job | Where | Started | Expected end | Output |
-|---|---|---|---|---|
-| none | | | | |
+| Job | Where | Started | Expected end | Expected rate | Output |
+|---|---|---|---|---|---|
+| none | | | | | |
 
 ## Next items
 1. 

@@ -1,5 +1,7 @@
 # Labels, teachers and roll-outs
 
+Contents: label record fields; ladder; distillation checks; relabelling loop; roll-out procedure; thresholds; on the threshold.
+
 ## Label record fields
 Source (which teacher or process), level (rung on the ladder), cost, date, version of the teacher, state id, the label, confidence or margin, and a flag for ambiguity.
 
@@ -24,6 +26,7 @@ Relabel only the slice a change touches; full relabelling costs a lot and hides 
 - Value is the mean outcome; regret is best minus chosen.
 - Pick N from the noise: enough that the margin you care about is several standard errors.
 - Log the continuation policy and its version.
+- Choose the continuation policy on purpose. Continuing with the teacher values each option as if the teacher took over: it cannot teach past the teacher's weak spots. Continuing with the student's own policy values options as the student will really play them: improvement on itself. A per-state mixture keeps both. Log which one each label used.
 
 ## Thresholds
 Write before looking: the margin required between best and runner-up, the agreement required across independent seed batches, and what happens in between (ambiguous). Keep the share of ambiguous states visible; if it is large, the decision may not matter or the roll-outs are too noisy.

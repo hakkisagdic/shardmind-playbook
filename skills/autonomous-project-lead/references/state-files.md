@@ -10,18 +10,22 @@ One page, overwritten, never appended. Someone who has not seen the project for 
 - **Unpushed work**: branches and commits that exist only locally, so a disk loss or a switch cannot hide them.
 - **What I need from you**: the shortest list of asks. If empty, say so; that is good news.
 
-Fresh numbers beat prose. Link to the experiment record rather than retelling it.
+Add an "Expected rate" to each running job (units per second or CPU-hours), so a stalled job shows against it. Fresh numbers beat prose. Link to the experiment record rather than retelling it.
 
 ## Open items
-One line per item: id, what, who or which agent, next step, blocked-by. Close items by moving them to a done section with the date, not by deleting. Review the whole list at least weekly and drop what no longer matters, saying why.
+One line per item: id, what, who or which agent, next step, blocked-by. Close items by moving them to a done section with the date, not by deleting.
+
+Keep acceptance in a machine-readable list beside the page: one record per deliverable (id, the check that proves it, status). Agents may change only the status, and only with the check's output attached. Render the page from it. Generate what a script can know (running jobs, unpushed work, schedules, slots held); hand-written status goes stale. Review the whole list at least weekly and drop what no longer matters, saying why.
 
 ## Operating lessons
 Append-only, newest on top. Each entry:
 - Date and a short title.
-- What happened (facts, numbers).
-- Cause (the real one, not the first guess).
-- Rule (a sentence that would have prevented it).
-- Enforcement (the script, check or hook that now carries the rule).
+- What happened (facts, numbers, timeline).
+- How it was noticed, and how late (a check, the scan, or a person).
+- Contributing factors. An incident needs several things to line up; naming one real cause hides the others, and the next incident uses them. Include what made it hard to see.
+- What went well, and where we were lucky.
+- Actions, each typed (detect, mitigate, prevent) and with an open-item id.
+- Rule (a sentence that would have prevented it) and the mechanism that carries it (the script, check or hook).
 Group by theme occasionally so repeated lessons become visible. A lesson that repeats means its enforcement was too weak.
 
 ## Daily diary

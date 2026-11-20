@@ -34,11 +34,12 @@
   "read_rule": {
     "test": "sequential | interval",
     "min_effect": 0.0,
-    "interval_z": 2,
+    "interval": {"method": "t | randomisation | bootstrap", "level": 0.95, "units_per_arm": 0},
     "equivalence_band": [0.0, 0.0],
     "false_promote": 0.05,
     "false_drop": 0.2,
-    "candidates_judged_against_incumbent": 1
+    "multiplicity": {"control": "per_candidate | family | fdr", "position_in_stream": 1, "alpha_for_this_candidate": 0.05},
+    "validity_checks": ["sample_ratio", "void_rate_by_arm", "flag_rate_by_arm"]
   },
   "decision_table": {
     "win": "interval lower bound above the line -> next step",

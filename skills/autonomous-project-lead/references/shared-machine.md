@@ -1,7 +1,7 @@
 # Shared-machine etiquette
 
 ## Before heavy work
-Run a room check (memory, CPU load, free disk, GPU use). Treat a "no" as final for now. For a full test suite or other long heavy job, take a slot from whatever slot mechanism the machine has, and release it afterwards even on failure.
+Run a room check (memory, CPU load, free disk, GPU use). Treat a "no" as final for now. Measure a heavy job's peak memory in a short dry run on its heaviest piece (longest input, largest batch), not on the easy part, and set a hard cap before it enters a window someone else opened. For a full test suite or other long heavy job, take a slot from whatever slot mechanism the machine has, and release it afterwards even on failure.
 
 ## Announcing
 A short note in a shared place: who, what, expected length, what it touches. Remove or update it when done.

@@ -16,7 +16,7 @@ Suppose it instead promotes the copy. Look for the usual suspects:
 - **Mixed conditions**: the two sides' games came from different parts of the day or different machines. Compare like with like (same time slices, weighted the same).
 - **Unequal service**: the copy answered faster than the incumbent, and speed helps. Record each side's response time; compare only games served within a tolerance, or give both sides the same queue.
 - **Repeated looks**: checking after every batch with a fixed-size test raises the false-positive rate well above its label.
-- **Many candidates**: with many candidates against one incumbent, some will pass by luck. Raise the bar with the number tried.
+- **Many candidates**: with many candidates against one incumbent, some will pass by luck. Give the stream an error budget that adds up (`gates.md`, "Many candidates against one incumbent"); a bar of alpha/k for the k-th candidate does not hold the family at alpha.
 - **Past promotions**: re-run earlier promotions through the repaired gate. Some may no longer pass; report that plainly.
 Keep A/A probes running as registered experiments of kind "A/A": a promotion, or a large statistic in either direction, is the yardstick's bias; a tie is the expected null.
 

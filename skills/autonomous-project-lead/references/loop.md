@@ -1,12 +1,13 @@
 # The judgement loop
 
 ## Shape of a round
-1. Read the status page and the resume note (small).
-2. Run the summary scripts. They print a few lines each: job verdicts, machine room, queue state, failed checks.
-3. Read the questions queue for new answers.
-4. Decide, using the list below.
-5. Act through scripts, agents or edits to state files.
-6. Make the state files true, then stop.
+1. Start as if after an interruption: run the scripted "what survived" check (jobs, schedules, holders, free disk), every time. A recovery path used daily works on the day it is needed. Then read the status page and the resume note (small).
+2. Run a cheap smoke check (does it still build, start and answer; if it is heavy, after the room check) before any new work; the last session may have left it broken.
+3. Run the summary scripts. They print a few lines each: job verdicts, machine room, queue state, failed checks.
+4. Read the questions queue for new answers.
+5. Decide, using the list below.
+6. Act through scripts, agents or edits to state files.
+7. Make the state files true, then stop.
 
 ## What to decide each round
 - Is anything finished that needs a decision (promote, drop, extend)?
