@@ -1,0 +1,12 @@
+{
+  "name": "shardmind-playbook",
+  "owner": {"name": "Hakki Sagdic"},
+  "description": "A method for running a long ML project with an autonomous lead agent.",
+  "plugins": [
+    {
+      "name": "shardmind-playbook",
+      "source": "./",
+      "description": "Method for running a long ML project with a fully autonomous lead agent: skills, commands and templates."
+    }
+  ]
+}

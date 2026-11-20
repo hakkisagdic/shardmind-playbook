@@ -1,0 +1,59 @@
+{
+  "id": "exp-0001",
+  "title": "",
+  "status": "planned",
+  "registered_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "question": "The owner's question this feeds.",
+  "hypothesis": "Treatment X raises metric M by at least D against control C.",
+  "prior_expectation": "What I expect, including where I expect to be wrong.",
+  "unit": "player | round | run (the unit the interval is over)",
+  "measure": {
+    "metric": "",
+    "computed_as": "",
+    "data": "held-out set or seed range, named",
+    "secondary": []
+  },
+  "arms": {
+    "treatment": {"about": "", "units": []},
+    "control": {"about": "", "units": [], "why_it_isolates_the_change": ""}
+  },
+  "yardstick": {
+    "equal_latency": true,
+    "latency_tolerance_ms": 20,
+    "aa_test_ref": "",
+    "pre_test": "what must reproduce before any real data"
+  },
+  "seeds": [],
+  "frozen_versions": {"model": "", "server": "", "code": ""},
+  "sample": {
+    "min": 0,
+    "max": 0,
+    "power_assumptions": "variances and effect sizes used",
+    "variance_look_at": 0
+  },
+  "read_rule": {
+    "test": "sequential | interval",
+    "min_effect": 0.0,
+    "interval_z": 2,
+    "equivalence_band": [0.0, 0.0],
+    "false_promote": 0.05,
+    "false_drop": 0.2,
+    "candidates_judged_against_incumbent": 1
+  },
+  "decision_table": {
+    "win": "interval lower bound above the line -> next step",
+    "loss": "interval upper bound below the line -> next step",
+    "null": "inside the equivalence band at max sample -> say so and stop",
+    "unclear": "extend once to max; still unclear is reported as unclear",
+    "borderline": "on the threshold -> value with error, no line move, confirm on fresh disjoint data, then decide by this table"
+  },
+  "void_rules": ["taken from the system's own log, independent of who was ahead"],
+  "window": {
+    "opens": "",
+    "closes": "",
+    "extensions": [{"reason": "", "stall_start": "", "stall_end": "", "new_close": ""}]
+  },
+  "interim_readout": null,
+  "budget": {"floor_for_other_workload": "", "lane_cap": 0, "step_down_order": []},
+  "result": null
+}

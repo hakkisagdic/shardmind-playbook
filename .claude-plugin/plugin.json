@@ -1,0 +1,9 @@
+{
+  "name": "shardmind-playbook",
+  "version": "0.1.0",
+  "description": "A method for running a long ML project with one autonomous lead agent: state files, a judgement-only loop, delegation, merge discipline, and pre-registered experiments.",
+  "author": {"name": "Hakki Sagdic"},
+  "license": "MIT",
+  "repository": "https://github.com/hakkisagdic/shardmind-playbook",
+  "keywords": ["autonomous-agents", "project-management", "machine-learning", "experiments", "reinforcement-learning", "workflow"]
+}
