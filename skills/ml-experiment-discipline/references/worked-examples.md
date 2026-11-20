@@ -7,14 +7,14 @@ An experiment has a 48 hour window. On day one a power cut stops all workers for
 - Measure the stall from a log the system wrote (last heartbeat before, first after), not from memory.
 - New close = old close + 6 hours. Write down: reason, stall start, stall end, new close.
 - Anything that straddled the stall is discarded and replayed, not counted.
-- No other reason extends a window. "The result is close and we want more data" is either the extension the record already allows, or a new experiment.
+- The rule for any other extension is in `yardsticks.md`, "Window extension". "The result is close and we want more data" is either the extension the record already allows, or a new experiment.
 - Scope every reader to the window: a verdict is computed only from data inside it, so an earlier run of the same candidate cannot leak in.
 
 ## 2. What an A/A test can catch
 The gate compares candidate against incumbent. To test the gate itself, enter a copy of the incumbent as the candidate. A fair gate should say "no difference" almost always.
 Suppose it instead promotes the copy. Look for the usual suspects:
 - **Mixed conditions**: the two sides' games came from different parts of the day or different machines. Compare like with like (same time slices, weighted the same).
-- **Unequal service**: the copy answered faster than the incumbent, and speed helps. Record each side's response time; compare only games served within a tolerance, or give both sides the same queue.
+- **Unequal service**: the copy answered faster than the incumbent, and speed helps. Record each side's response time. Prefer fixes made before assignment: one queue for both sides, and a short latency probe that must pass before a session starts. Keeping only games served within a tolerance is a filter after assignment and can move with the outcome: if you use it, report the kept share per arm and the unfiltered result beside it.
 - **Repeated looks**: checking after every batch with a fixed-size test raises the false-positive rate well above its label.
 - **Many candidates**: with many candidates against one incumbent, some will pass by luck. Give the stream an error budget that adds up (`gates.md`, "Many candidates against one incumbent"); a bar of alpha/k for the k-th candidate does not hold the family at alpha.
 - **Past promotions**: re-run earlier promotions through the repaired gate. Some may no longer pass; report that plainly.
@@ -55,6 +55,8 @@ Before trusting values from simulated continuations:
 - Forcing the policy's own choice equals leaving it unforced.
 - Standard error falls with the square root of the roll-out count: four times as many halves it. Choose N from the margin you care about.
 - A faster implementation must produce identical output; keep a hash test.
+- Time a speed-up on the very host that will run the job, alternating the two versions run after run, by CPU time or instructions retired; wall-clock rates on a loaded machine are good for ratios at most. Mark any row measured under someone else's load.
+- Byte identity needs arithmetic with one fixed order. Where hardware or a library changes the order of sums, compare with a higher-precision reference at a stated tolerance and require identical decisions, not only close numbers.
 - Choose the best option on one half of the roll-outs and estimate its value on the other half, to avoid picking the luckiest.
 
 ## 7. Enforcing a shared budget

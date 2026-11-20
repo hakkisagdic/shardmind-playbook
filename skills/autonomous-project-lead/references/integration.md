@@ -8,6 +8,7 @@
 ## During a chain
 - Nobody commits to main. Tell agents who work in the main checkout. Anything they need to record goes through the shared tools that the merge step knows about, or waits.
 - If main moves during a merge's checks, the final push must refuse; rerun that merge. That refusal protects you.
+- Main only ever moves to a commit that already passed, so a failed merge cannot ride along with the next push (see the helper's steps below).
 - One script runs the chain and stops at the first merge that does not end in a clear success line. You then decide; the script does not improvise.
 
 ## Trial merges
@@ -29,18 +30,19 @@ Registries, cost logs and index files that scripts rewrite should be committed b
 ## What a good merge helper does (semantics, no code)
 In order, each step only if the one before succeeded:
 1. Refuses unless main is checked out, no merge is under way, no tracked file is modified (routine-generated files are named in a list and committed first under a message naming the routine), the branch has its own commits, and main is not behind the remote (fetch first).
-2. Merges with a merge commit (never fast-forward) and an English message. A conflict in a routine-generated file takes main's copy where the list says so and says so in the message; any other conflict stops with the files listed and the merge left under way for a person. It never resolves or aborts on its own.
-3. Verifies the merge commit has two parents and the branch is an ancestor of main.
-4. Runs the test suites the change touches, one process per module, once the machine-room check passes, with a claim announced while they run. Selection: the suites for changed code, suites that import a changed module (followed through the project), docs and CI suites always. A failing suite stops it with the merge left, unpushed.
+2. Merges on a side copy first (a temporary worktree or a candidate ref), with a merge commit (never fast-forward) and an English message. Main is not touched yet. A conflict in a routine-generated file takes main's copy where the list says so and says so in the message. Any other conflict ends the attempt with the files listed and nothing left under way in the main checkout; it is resolved in the branch's own worktree by merging main into it.
+3. Verifies the candidate has two parents and the branch is an ancestor of it.
+4. Runs the test suites the change touches on that candidate, one process per module, once the machine-room check passes, with a claim announced while they run. Selection: the suites for changed code, suites that import a changed module (followed through the project), docs and CI suites always. Only a candidate that passed becomes main's new head, and only if main has not moved since; otherwise the helper starts again from the new main. A failing suite leaves main exactly as it was.
 5. Pushes (if the remote is public, pushing follows the owner's policy, class three), retrying a few times; a refusal because the remote moved stops it.
 6. Only then cleans up: removes the branch's worktree unless it holds work of its own (changed tracked files, unknown files, data the main checkout lacks, all named), deletes the branch with the refusing form, and deletes the remote branch.
-Run again after a stop it continues where it stopped. One merge at a time (a lock). Distinct exit codes: done, refused with nothing changed, conflicts, suite failed, not pushed, merged but cleanup left. A queue script stops at the first non-done.
+Run again after a stop, it starts from the current main and the first branch not yet landed. One merge at a time (a lock). Distinct exit codes: done, refused with nothing changed, conflicts, suite failed, not pushed, merged but cleanup left. A queue script stops at the first non-done.
 
 Practicalities:
 - Before a chain, bring main into each branch beforehand (or trial-merge) so conflicts surface in the branch's own worktree.
 - Run the queue only when load is under the limit; do not merge while a long nightly suite runs.
 - Before a push, list commits main has beyond the remote.
 - Untracked files are fine; modified tracked files are not.
+- Look for stray branches each round, local and remote: a branch nobody listed is either unfinished work to queue or a leftover to delete after the ancestor check.
 
 ## Registry semantics
 A registry of experiments is a versioned file: a definition is committed before its data comes in; closing writes the outcome beside it. State the machine learns over time (readouts, wake items) lives in an untracked state file so merges never meet it. Writers hold a lock on the registry folder. From a worktree, the registry is the worktree's (what its branch merges) and the state is the main checkout's. A record has a status: planned, running, closed, cancelled.

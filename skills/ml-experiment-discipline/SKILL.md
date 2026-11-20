@@ -36,8 +36,8 @@ All of it is written and saved (committed or registered) **before any data is lo
 
 A candidate becomes the new default only through a gate that reads outcomes sequentially:
 - Keep a running test statistic and two boundaries.
-- Crossing the upper boundary: **promote**. Crossing the lower: **drop**. Between them: **keep playing** (collect more, up to a maximum sample, then drop or extend per the pre-registered rule).
-- Bounds come from the accepted false-promote and false-drop rates, fixed in advance.
+- Crossing the upper boundary: **promote**. Crossing the lower: **drop**. Between them: **keep playing** (collect more, up to a maximum sample, then drop, or extend as the record allows; the one rule for extensions is in `references/yardsticks.md`).
+- Bounds come from the accepted false-promote and false-drop rates, fixed in advance. Name the design (`references/gates.md`); a sequential gate's looks are its planned readouts, not peeking.
 - Promote only when the gate says so and the A/A check is current. Record the verdict and the numbers.
 
 See `references/gates.md`.
@@ -47,20 +47,20 @@ See `references/gates.md`.
 - **Teacher ladder**: stronger and costlier sources of labels at the top (search, large models, long roll-outs), cheaper ones below (rules, small models). Use the cheapest teacher that is good enough for the decision at hand and escalate only where the cheap one is unsure or wrong.
 - **Distillation**: train the small fast model on the teacher's decisions or values. Under pure imitation, the teacher's quality in the states the student reaches bounds what the labels can teach. To pass the teacher the student needs a signal the teacher does not supply: outcomes (roll-out labels, section 6), reward from play with the imitation weight falling over time, or search.
 - **Honest labels**: every label carries its source, its cost level, its date and its known weaknesses. Never mix label sources without a field saying which is which. Never call a label ground truth if it is a teacher's opinion.
-- **DAgger-style relabelling**: let the current student play, collect the states it actually reaches, have the teacher relabel those, and train on the union. This fixes the mismatch between teacher states and student states. Relabel only states a change affects.
+- **DAgger-style relabelling**: let the current student play, collect the states it actually reaches, have the teacher relabel those, and train on the union. This fixes the mismatch between teacher states and student states. Relabel only states a change affects. Weighting recorded choices by their outcomes only re-weights moves the data already holds; it cannot value a move never tried. That needs exploration: a simulator or live play. Qualify a teacher before buying labels at scale (`references/labels.md`).
 - **Replay**: when fine-tuning, mix in old data so earlier skills are not lost.
 
 ## 5b. Self-play populations
 
-Self-play learns against a population, not one opponent: past selves, fixed scripted anchors and exploiters. An exploiter is a measuring instrument (how long it takes to beat the main agent says how exploitable that agent is), a rating is not a worst case, and population-based training copies weights only on a significant difference. Details in `references/self-play.md`.
+Self-play learns against a population, not one opponent: past selves, fixed scripted anchors and exploiters. An exploiter is a measuring instrument (how long it takes to beat the main agent says how exploitable that agent is), a rating is not a worst case, and population-based training copies weights only on a significant difference. Details in `references/self-play.md`. A fast simulator is a model of the real environment, and a policy learns its quirks as readily as the task: see `references/simulators.md`.
 
 ## 6. Roll-out (counterfactual) labels
 
 For a saved state, force each alternative at the decision, play each to the end several times under a fixed continuation policy, and take the mean outcome as that alternative's value. The chosen alternative's value subtracted from the best one's is the decision's regret.
-- Use common random numbers: every alternative plays the same seeds, so differences are cleaner than the noise.
+- Use common random numbers: every alternative plays the same seeds. Then measure what the pairing bought (the paired against the unpaired standard error of a difference). It is often little, because alternatives that act at different moments soon draw different numbers. Key each draw by the event it belongs to (the actor and its n-th action of a kind), not by the clock or a shared stream, so the pairing survives.
 - State the continuation policy and choose it on purpose (the teacher's, the student's, or a mixture); the label is only as good as it. See `references/labels.md`.
 - **Agreement thresholds**: to turn values into a hard label, require the best alternative to beat the runner-up by a margin and agree across seed batches. Below the margin, mark the state ambiguous: either drop it, soft-label it, or collect more roll-outs by a fixed rule written beforehand.
-- **A result on the threshold** is neither pass nor fail. Report it as borderline with its number, apply the pre-registered borderline rule (usually: not promoted, rerun once with a fresh seed set and larger sample), and do not move the threshold.
+- **A result on the threshold** is neither pass nor fail. Report it as borderline with its number, apply the pre-registered borderline rule (usually: not promoted, rerun once with a fresh seed set and larger sample), and do not move the threshold. Call it a lean, confirm on a larger, separate set under identical thresholds before the costly step, and claim no downstream benefit until it is measured.
 
 See `references/labels.md`.
 
@@ -72,6 +72,8 @@ GPU and CPU are shared with other workloads.
 - If throughput or someone else's performance drops, **step down one consumer at a time** (fewer workers, a smaller batch, then pausing), re-measure after each step, and stop stepping when the drop is gone. Record the steps.
 - Time-slice heavy jobs in off-peak hours when you can.
 - An experiment's window must account for throttling; throttled lanes count as stood still only if they really stopped.
+- Baseline the other workload alone and beside each consumer, write a floor, run in windows with a hold flag that says why, cap total real-time lanes, and flag slow runs automatically.
+- Value capacity you do not pay for (free tiers, credits, the owner's machine) at a published list price, the same way every day, and mark each figure measured, lower bound or estimate. Track used over granted. Buy a commitment only for load you can predict.
 
 ## 8. Honest readouts
 
@@ -84,28 +86,32 @@ GPU and CPU are shared with other workloads.
 
 ## 9. Concrete rules
 
+What sections 1-8 do not say. Each rule has one home; where it lives elsewhere this section points to it.
+
 **The registry.** Every experiment is a record in a versioned file, committed before its data. A script, not you, reads it once its window closes or its sample suffices; a record that is overdue and unread a day later raises an alert. A reader counts only outcomes inside the experiment's window.
 
-**What a pre-registration holds** (`references/preregistration.md`): the question it feeds, hypothesis with a written prior, arms, metric, unit (the person rather than the round when rounds cluster), minimum and maximum sample from a power estimate, one allowed look at variance only, a decision table for win, loss, null and unclear (with an equivalence band for null), frozen versions, void rules read from the system's log rather than from who was winning, a risk table, and the next step for each verdict.
+**What a pre-registration holds** (`references/preregistration.md`): the question it feeds, hypothesis with a written prior, arms, metric, unit (the person rather than the round when rounds cluster), minimum and maximum sample from a power estimate, one allowed look at variance only, a decision table for win, loss, null and unclear (with an equivalence band for null), the claim sentence, frozen versions, void rules read from the system's log rather than from who was winning, a risk table, and the next step for each verdict.
 
-**Extending a window.** New close = old close + the stall, taken from a log the system wrote and recorded with reason and times. Anything straddling the stall is replayed, not counted. One pre-registered extension to the maximum sample is the only other extension.
+**Extending a window.** One home: `references/yardsticks.md`, "Window extension". An extension is part of the design or it is a new experiment.
 
-**What an A/A test can catch.** A copy of the incumbent that the gate promotes points at mixed conditions, unequal service speed, repeated looks, many candidates, or all of them. Fixes: compare like with like, match response times, a minimum sample, an error budget that adds up over the candidates (`references/gates.md`), standing A/A probes. Replay old promotions through the repaired gate (`references/worked-examples.md`, section 2).
+**What an A/A test can catch.** A copy of the incumbent that the gate promotes points at mixed conditions, unequal service speed, repeated looks, many candidates, or all of them (`references/worked-examples.md`, section 2).
 
-**How a gate decides.** A sequential statistic with an upper and lower boundary and a maximum sample: promote, drop, keep playing. Repeated fixed-size tests overstate significance. Name the design and measure its error rates by simulation before first use (`references/gates.md`). The statistic at the crossing is biased upward, so the gain is measured afterwards on fresh rounds. Where the first judge saturates, a second independent judge governs. Scoreboards show no figure without its count and interval.
-
-**A borderline result.** Apply the pre-written rule as written and never move the line. Report the value with its error, call it a lean, confirm on a larger, separate set under identical thresholds before the costly step, and claim no downstream benefit until it is measured.
+**How a gate reads.** The statistic at the crossing is biased upward, so the gain is measured afterwards on fresh rounds of fixed size. Where the first judge saturates, a second independent judge governs. Scoreboards show no figure without its count and interval.
 
 **Labels from a teacher.** Agreement is a diagnostic; play is the judge. A teacher need only beat the student at the student's own states. Check source, version and roll-out count per label. Weight rare high-value labels and register the expected tie. Identify datasets by content hash, never by file name.
 
-**Roll-out checks.** Replay reproduces the original exactly; a known-answer state is found; one seed gives identical output on one worker and many; forcing the policy's own choice equals the unforced run; keep a hash test for speed-ups; estimate the best option's value on data apart from the data that chose it.
+**Roll-out checks.** Replay, known-answer, seed-identity, forced-choice and hash tests are listed in `references/worked-examples.md`, section 6. Estimate the best option's value on data apart from the data that chose it.
 
-**A shared budget.** Baseline the other workload alone and beside each consumer, write a floor, step down one consumer at a time, run in windows with a hold flag that says why, cap total real-time lanes, flag slow runs automatically.
-
-**Few units.** Count the units behind every interval and print the count beside it; below a few dozen a normal interval is too narrow, and a randomisation test has a smallest possible p-value that may exceed your threshold (`references/preregistration.md`).
+**Few units.** Count the units behind every interval and print the count beside it; below a few dozen a normal interval can be too narrow, and a randomisation test has a smallest possible p-value that may exceed your threshold (`references/preregistration.md`).
 
 **Do not change what you measure.** A faster experiment that alters the thing measured measures something else. Prove "no change" with a matched control or identical output under a fixed seed.
 
 **Put the bar before the build.** A new tool gets a registered value test before its code exists.
 
-More in `references/self-play.md`, `references/gates.md`, `references/labels.md`, `references/yardsticks.md`, `references/readouts.md`, `references/preregistration.md`, `references/worked-examples.md`.
+More in `references/self-play.md`, `references/simulators.md`, `references/gates.md`, `references/labels.md`, `references/yardsticks.md`, `references/readouts.md`, `references/preregistration.md`, `references/worked-examples.md`.
+
+## Further reading
+
+- Spotify Engineering, "Choosing a sequential testing framework": https://engineering.atspotify.com/2023/3/choosing-sequential-testing-framework-comparisons-and-discussions
+- Microsoft Research, "Diagnosing sample ratio mismatch in A/B testing": https://www.microsoft.com/en-us/research/articles/diagnosing-sample-ratio-mismatch-in-a-b-testing/
+- Anthropic, "Demystifying evals for AI agents": https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents

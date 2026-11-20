@@ -15,7 +15,7 @@ Add an "Expected rate" to each running job (units per second or CPU-hours), so a
 ## Open items
 One line per item: id, what, who or which agent, next step, blocked-by. Close items by moving them to a done section with the date, not by deleting.
 
-Keep acceptance in a machine-readable list beside the page: one record per deliverable (id, the check that proves it, status). Agents may change only the status, and only with the check's output attached. Render the page from it. Generate what a script can know (running jobs, unpushed work, schedules, slots held); hand-written status goes stale. Review the whole list at least weekly and drop what no longer matters, saying why.
+Keep acceptance in a machine-readable list beside the page (`templates/acceptance.json`): one record per deliverable (`id`, `check`, `status`, `evidence`). Agents may change only the status and the evidence, and only with the check's output attached. The merge helper refuses a change to this file that touches anything else; adding and closing records is the owner's or the lead's job, in a separate commit, and the open-items page is rendered from it. Generate what a script can know (running jobs, unpushed work, schedules, slots held); hand-written status goes stale. Review the whole list at least weekly and drop what no longer matters, saying why.
 
 ## Operating lessons
 Append-only, newest on top. Each entry:

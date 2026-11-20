@@ -5,6 +5,7 @@
   "registered_at": "YYYY-MM-DDTHH:MM:SSZ",
   "question": "The owner's question this feeds.",
   "hypothesis": "Treatment X raises metric M by at least D against control C.",
+  "claim_sentence": "The exact sentence a win would let you say, with its population and conditions.",
   "prior_expectation": "What I expect, including where I expect to be wrong.",
   "unit": "player | round | run (the unit the interval is over)",
   "measure": {
@@ -33,12 +34,17 @@
   },
   "read_rule": {
     "test": "sequential | interval",
+    "design": "group_sequential | always_valid | sprt | fixed",
+    "look_schedule": [],
+    "spending": "",
+    "futility": {"conditional_power_below": null},
+    "simulated": {"false_promote": null, "promote_at_target": null, "runs": 0},
     "min_effect": 0.0,
     "interval": {"method": "t | randomisation | bootstrap", "level": 0.95, "units_per_arm": 0},
     "equivalence_band": [0.0, 0.0],
     "false_promote": 0.05,
     "false_drop": 0.2,
-    "multiplicity": {"control": "per_candidate | family | fdr", "position_in_stream": 1, "alpha_for_this_candidate": 0.05},
+    "multiplicity": {"control": "per_candidate | family | fdr", "position_in_stream": 1, "alpha_for_this_candidate": 0.05, "budget_rule": "", "carries_across_incumbents": false},
     "validity_checks": ["sample_ratio", "void_rate_by_arm", "flag_rate_by_arm"]
   },
   "decision_table": {
@@ -55,6 +61,7 @@
     "extensions": [{"reason": "", "stall_start": "", "stall_end": "", "new_close": ""}]
   },
   "interim_readout": null,
+  "follow_up": {"fixed_sample": 0},
   "budget": {"floor_for_other_workload": "", "lane_cap": 0, "step_down_order": []},
   "result": null
 }

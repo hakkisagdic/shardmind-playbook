@@ -18,7 +18,8 @@ Remove temp files, scratch worktrees, containers, caches you created, and finish
 ## Disk
 - Know the budget; check free space before large writes.
 - Checkpoints, rollouts and logs are the usual growth. Keep the last few, compress or move the rest, record where they went.
-- Delete only what can be regenerated or has a verified copy elsewhere.
+- Delete only what can be regenerated or has a verified copy elsewhere. Check a remote copy by size and hash before the local one goes.
+- Keep every artefact that was ever promoted (a later re-judging needs it), whatever is live, and anything you cannot identify. Archive the rest.
 
 ## Coordinator
 One party decides priorities and GPU or CPU time among projects. You request, you state expected benefit, you accept the answer. If your work has no current priority, do light, reversible, useful work.
@@ -27,7 +28,7 @@ One party decides priorities and GPU or CPU time among projects. You request, yo
 Granted capacity left idle is waste. Keep a ready list of useful reversible jobs for free or already-paid capacity, within the owner's budget, and start them when the check allows.
 
 ## Measuring pressure
-Judge memory by the operating system's own pressure report and by the paging rate (pages swapped in per second against that machine's quiet baseline), not by swap size or by free memory derived by hand: swap files stay large after heavy jobs, so a gate on size is always red, and a gate that is always red is ignored. Check every few steps during a long job, because pressure builds slowly.
+Judge memory by the operating system's own pressure report and by the paging rate (pages swapped in per second against that machine's quiet baseline), not by swap size or by free memory derived by hand: swap files stay large after heavy jobs, so a size gate never clears, and a gate that never clears is ignored. Check every few steps during a long job, because pressure builds slowly.
 
 ## Claims
 A claim is a note that tells others whom to ask when the machine is tight. Claim before long heavy work, release after. A full test suite also takes a numbered slot from the machine's slot mechanism if it has one; release by name if an agent died holding one.

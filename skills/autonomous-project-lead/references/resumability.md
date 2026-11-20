@@ -16,8 +16,8 @@ Keep it at the top of the status page or beside it:
 - Things not to repeat (a step that is not idempotent, a decision already made).
 
 ## After an interruption
-1. Read the resume note and status page.
-2. Check what survived: processes, jobs, schedules, branches, free disk.
+1. Check what survived: processes, jobs, schedules, branches, free disk. This is the first step of every round (`loop.md`), not a special procedure.
+2. Read the resume note and status page.
 3. Re-arm schedules and watchers; verify with a list, not by assumption.
 4. Compare the repository state with the note; fix the note.
 5. Continue the loop.
@@ -36,3 +36,4 @@ Write progress to disk at intervals, make each step safe to run again, keep inpu
 - Keep a "gate window" or similar hold flag in a file with the reason written inside it, so a returning lead knows why it is set.
 - An agent that stops while holding a resource leaves the resource waiting: check for frozen work with no live agent every round.
 - Long remote jobs: start detached, write a pid file, log to a file, check by script.
+- Counts that feed a verdict are keyed by the experiment, not by the machine or the lane that produced them. Otherwise a change of machine, or a move of the gate, restarts every count.

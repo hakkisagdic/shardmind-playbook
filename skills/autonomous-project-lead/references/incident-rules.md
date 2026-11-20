@@ -12,7 +12,7 @@ Retire rules into mechanisms, never by deleting them. When a script, hook or per
 - D. Accounts, quotas, agents
 - E. Correctness of the work itself
 - F. Method
-- G. Later additions
+- G. Publishing
 - H. Carried by a mechanism
 
 ## A. Schedules, watchers and things that silently stop
@@ -26,6 +26,7 @@ Reason: absence of an alarm looks identical to a quiet system.
 All checks relied on events firing. When the event source died, nothing fired.
 Rule: run two independent layers: alarms (fast, event-driven) and a periodic scan that looks for expected-but-missing evidence (a lane with no heartbeat, a job with no output for too long). The owner's standard: the lead catches problems, the owner does not.
 Reason: the scan finds what the alarm cannot know it missed.
+The scan needs a watcher too: it writes a heartbeat each sweep, and something independent of it (the scheduler, another machine) alerts when the heartbeat is old. Count how many alerts needed an action; if most did not, fix or remove them before adding new ones. What counts as an alert, and how many one person can carry, is in `alerts.md`; see also rule 55.
 
 **3. A watcher or helper that holds "paused" state in memory undid a manual pause.**
 A periodic guard held its settings only in its own memory and periodically wrote them back, erasing a manual pause.
@@ -34,7 +35,7 @@ Reason: two writers with private copies overwrite each other.
 
 **4. A false alarm after a restart or sleep taught everyone to ignore alarms.**
 Silence timers counted from the wrong origin (before the process restarted, before the machine woke).
-Rule: measure staleness from the later of "process start" and "machine's last wake". Test each alarm with a restart and a sleep.
+Rule: measure staleness from the later of "process start" and "machine's last wake". Test each alarm with a restart and a sleep, and see rule 59 for proving that it can fire at all.
 Reason: a noisy alarm is worse than none; it trains the reader to skip the real one.
 
 **5. Pausing in the wrong order left a worker without its place.**
@@ -55,7 +56,25 @@ Reason: preventive interruptions have a cost; check whether the risk is real fir
 **8. Reminders repeated because a watcher was forgotten.**
 Items awaiting approval were re-announced to the owner because the watcher that notices new items was not re-created after an event.
 Rule: notify only on new items; the watcher is a background wait that wakes on a new item and is re-created after every event it handled. Whatever needs the owner goes to whatever channel they asked for (if they set one up), short, saying plainly when it needs them at the computer. Chat text alone may not be seen.
-The scan needs a watcher too: it writes a heartbeat each sweep, and something independent of it (the scheduler, another machine) alerts when the heartbeat is old. Count how many alerts needed an action; if most did not, fix or remove them before adding new ones. See also rule 55.
+
+**55. Known warnings woke the owner at night.**
+Rule: a watcher acknowledges known items instead of skipping them; a silence list holds each known item with a reason and an expiry; an alert that returns under a new identity after each acknowledgement is a bug. See `alerts.md` for what an alert is and how many a person can carry.
+Reason: a silence with no expiry hides the day the warning becomes real.
+
+**58. A check that could not run was read as "all clear".**
+Silence was taken for health in three different places: a truncated reply to a status query, a checker that never got built and so reported nothing, and a cleanup job whose protected-items list could not be loaded and so looked empty. Each time, the absence of output stood in for a verdict.
+Rule: every check returns one of three answers: ok, not ok, could not tell. "Could not tell" covers errors, timeouts and truncated or unparseable replies. For a monitor it raises an alarm; for a destructive job it halts the job. It is never treated as ok and never as an empty list.
+Reason: code that does not separate "nothing came back" from "no answer came back" will merge them.
+
+**59. An alarm that could not fire.**
+An audit forced each alarm's trigger condition with synthetic input, and several alarms turned out unable to fire: a misspelt field, a threshold on a value never configured, a branch the code never reached. A check also printed a warning to a log that nobody opened.
+Rule: an alarm counts as working only after you have watched it go off. Provoke the failure with synthetic input, confirm the alarm arrives, and keep that as a test. A warning that a check prints goes to the alarm path, not only to a log.
+Reason: nothing in the code that raises an alarm shows that it cannot fire.
+
+**61. A resource ended on a date nobody was watching.**
+A prepaid balance ran out, the machines billed to it stopped, and whatever lived only on them stopped with them. Other deadlines of the same kind were found afterwards.
+Rule: list everything that ends on a date (a credit, a lease, a quota, a token, a certificate) with what lives only on it. Alarm ahead of the date, saying what would be lost, and rehearse the move on one item first. A recurring job should not depend on a step only the owner can take; redesign it so it needs none. The exception is a class-three step (money, accounts, consent): do not redesign around it; give the owner an early alarm before the date, saying what will be lost.
+Reason: a date that is written down nowhere is kept by nobody.
 
 ## B. Machine, memory, disk, processes
 
@@ -65,7 +84,7 @@ Reason: peak memory is the sum of simultaneous loads, not the average.
 
 **10. Measuring memory with the wrong number.**
 Figures derived by hand from raw page counts gave a wrong picture, and total swap size stayed high at rest because the system keeps its swap file.
-Rule: judge memory by the operating system's own pressure report and by the paging rate (how fast pages are being swapped in), measured against a baseline for that machine. Never gate on swap size. A gate that is always red gets ignored, and an ignored gate is worse than none.
+Rule: judge memory by the operating system's own pressure report and by the paging rate (how fast pages are being swapped in), measured against a baseline for that machine. Never gate on swap size. A gate that never turns green is soon ignored, and an ignored gate is worse than none.
 
 **11. Killing processes by pattern hit someone else's work.**
 A pattern-based kill, and a stop of processes assumed to be one's own leftovers, ended work belonging to others.
@@ -108,11 +127,30 @@ Rule: every timed round compares a wall clock with a monotonic clock and the las
 Load from other projects' tests and a game server starved the system; most runs were flagged not comparable.
 Rule: plan real-time work for a small fixed number of lanes in total (fewer lanes of clean data beat many noisy ones); an experiment takes the place of another lane group, not extra capacity; flag runs automatically and alarm when the flagged share is high.
 
+**52. A long job starved for hours and nobody saw.**
+Its watcher logged only "started" and "finished".
+Rule: write the expected rate (units per second or CPU-hours) when a long job starts; the watcher compares progress with it; under half in the first hour is an incident. Choose how far to background a job from measured load, and decide before the start whether the job can be reprioritised without a restart.
+Reason: a job that is slow looks the same as a job that is running until someone compares it with a number.
+
+**53. A memory peak was estimated from the easy part of the input.**
+The job was killed mid-window and slowed everyone.
+Rule: on a shared machine, measure a heavy job's peak in a short dry run on its heaviest piece (longest input, largest batch), set a hard cap, and only then enter a window someone else opened.
+Reason: the peak is set by the worst piece, not the average one.
+
+**54. A measurement window opened with more consumers than the budget counted.**
+Rule: when a window opens, count every consumer of the shared device from scratch; stop what exceeds the budget before the window, and read the response time once in the first half hour.
+Reason: a budget written earlier does not know what started since.
+
+**60. A running process kept the code it started with.**
+A fix was merged, yet its effect never appeared: the workers had been launched earlier and still ran the old code. Copies of a build on other machines and containers started from a moving image name drifted the same way, each quietly running something other than the checkout.
+Rule: every worker and every build records the commit or source digest it was made from, taken before the build starts. The status shows where what is running differs from the checkout, read from the running thing, not from a name. A long-running worker ends at a safe point when a merge changed its code, and its supervisor starts it again. Exceptions: workers frozen inside a pre-registered window, and user-facing services, restart only when the window closes or after the class-two notice window; the status page shows which are waiting and why.
+Reason: a file on disk says what will run next, not what is running now.
+
 ## C. Merges, branches, worktrees
 
 **22. A merge failed silently and the branch was then deleted.**
-A one-liner searched the merge output for two words, saw neither, went on, and force-deleted the branch.
-Rule: after a merge, verify that the branch tip is an ancestor of main; delete with the safe form that refuses unmerged work; never grep for success, read the exit code and the final line.
+A one-line script looked for two expected words in the merge output, found neither, carried on, and force-deleted the branch.
+Rule: after a merge, verify that the branch tip is an ancestor of main; delete with the safe form that refuses unmerged work; never infer success from text, read the exit code and the final line. An exit code can lie both ways: a no-op can exit 0, and a pipeline can report failure for a check that actually succeeded. Where it matters, verify the effect itself (the commit is an ancestor, the file has the new digest, the service answers).
 
 **23. Dirty tracked file in main blocked the queue.**
 A helper refuses to start with uncommitted tracked changes. One stray edit made four queued merges refuse in seconds.
@@ -123,10 +161,10 @@ The helper rightly declines to push when main has advanced since it began, but e
 Rule: nobody commits to main during a chain; announce it to agents who use the main checkout.
 
 **25. A merge conflict left in main broke the running service.**
-Rule: abort a conflicting merge at once, resolve in the branch's own worktree by merging main into it, and trial-merge every branch with main before the chain begins.
+Rule: abort a conflicting merge at once, resolve in the branch's own worktree by merging main into it, and trial-merge every branch with main before the chain begins. Better still, let the helper merge on a side copy so that main never holds a conflict (`integration.md`).
 
 **26. A merge whose tests broke stayed in main, unpushed; the next push carried it.**
-Rule: before every push, list the commits that main has beyond the remote; a failing merge is undone or fixed immediately, never left.
+Rule: before every push, list the commits that main has beyond the remote; a failing merge is undone or fixed immediately, never left. Better still, main moves only to a candidate that already passed (`integration.md`).
 
 **27. Worktree agents could not merge into main and the merge helper then deleted their worktree.**
 Rule: tell agents "your last step is to leave the merge to the lead"; the lead merges with the helper; an agent that must continue after the merge needs a fresh worktree.
@@ -143,6 +181,10 @@ Rule: write commit messages in the project's one language, the way the helper re
 
 **31. The queue's own files lived in a scratch folder that an account switch emptied.**
 Rule: queue list, queue script and pid file live in a durable folder in the repository's working area, started detached with a pid file.
+
+**56. A branch needed by a fixed outside deadline waited in the queue behind load.**
+Rule: a branch tied to an outside deadline goes to the front, and the party waiting gets the fallback ("take it from the branch") at once. Never edit the head of the queue while its merge runs.
+Reason: the queue's order is about load, the deadline is about someone else's clock.
 
 ## D. Accounts, quotas, agents
 
@@ -163,11 +205,20 @@ Rule: whenever workers start (resume, restart, new machine), go through each run
 **36. A tidy rule or scan has to know about the pause.**
 Rule: when you park something, change every place that would re-create it (schedule text, queue, cron, guard).
 
+**51. An agent bypassed a guard that refused its commit.**
+Rule: a refusing hook or check is fixed at its cause; no skip flag, no alternative hooks path, no environment switch. The line is stated once, in the brief (`delegation.md`, "A brief"), and goes into every brief.
+Reason: a hook runs more checks than the one that fired.
+
+**63. A retry multiplied the load that caused the refusal.**
+After a remote service refused a request, a script retried at once; each retry held a shared channel that other jobs needed.
+Rule: after a refusal, back off and probe with a small request before repeating the expensive one. A retry must not hold a shared channel while it waits.
+Reason: the retry multiplies the load that caused the refusal.
+
 ## E. Correctness of the work itself
 
 **37. Same filename, different content: the wrong dataset was trained.**
 A training step cached downloads by filename; several teachers' datasets shared one name; the jobs trained on an old set and two wrong conclusions followed.
-Rule: identify cached inputs by content hash or full path, never by name; before concluding from a result, read the model's own record of what it was trained on.
+Rule: identify cached inputs by content hash or full path, never by name; before concluding from a result, read the model's own record of what it was trained on. A key holds exactly what the value depends on: too little serves stale data, too much rebuilds everything after an unrelated change.
 
 **38. A silent fallback imitated a result.**
 Old opponents failed to load and a scripted bot played in their place; "exploiters" learned to beat the bot and looked successful.
@@ -175,7 +226,7 @@ Rule: a fallback must be loud (counted, logged, alarmed); when two measurements 
 
 **39. A small observable pointed to a large bug.**
 Training slowed steadily; profiling showed most time spent counting items in one container, which held huge numbers of duplicates that the environment kept adding.
-Rule: when slowness or a strange rate appears, profile before theorising and trust a sample of real states over reasoning. Compare simulator and reality as distributions; when they differ, find which one is wrong before adapting either.
+Rule: when slowness or a strange rate appears, profile before theorising and trust a sample of real states over reasoning. Compare simulator and reality as distributions; when they differ, find which one is wrong before adapting either. The ML skill's `references/simulators.md` lists the checks.
 
 **40. The first suspect was not the cause.**
 Priority changes and extra cores did nothing; the real cause was two processes waiting for each other.
@@ -195,6 +246,11 @@ Rule: the judge is play in the real environment through the gate; agreement is a
 **44. Wrong numbers stated confidently.**
 When you find your own earlier claim wrong (a process you thought was yours, a count you misread), say so in the report, with the corrected number and the reason.
 
+**62. A test polluted the data a live service reads.**
+A test of time-handling code left a far-future timestamp in the directory the running service reads, and every reader believed it.
+Rule: a test never touches live data: it works in a private directory and fails if any path it uses leads outside it. Readers drop timestamps from the future.
+Reason: a test that shares its state with production is a production event.
+
 ## F. Method
 
 **45. An experiment nobody read was only a setting.**
@@ -213,33 +269,7 @@ Rule: A/A probes; see the ML skill.
 
 **50. Tools need tests too.** Small infrastructure bugs (state in memory, a freeze on a canary, a dropped session, a default timeout under load) cost hours each and looked like training problems. Each fix: a few lines and a test. Give test timeouts headroom for load.
 
-## G. Later additions
-
-**51. An agent bypassed a guard that refused its commit.**
-Rule: a refusing hook or check is fixed at its cause; no skip flag, no alternative hooks path, no environment switch. The line goes in every brief.
-Reason: a hook runs more checks than the one that fired.
-
-**52. A long job starved for hours and nobody saw.**
-Its watcher logged only "started" and "finished".
-Rule: write the expected rate (units per second or CPU-hours) when a long job starts; the watcher compares progress with it; under half in the first hour is an incident. Choose how far to background a job from measured load, and decide before the start whether the job can be reprioritised without a restart.
-Reason: a job that is slow looks the same as a job that is running until someone compares it with a number.
-
-**53. A memory peak was estimated from the easy part of the input.**
-The job was killed mid-window and slowed everyone.
-Rule: on a shared machine, measure a heavy job's peak in a short dry run on its heaviest piece (longest input, largest batch), set a hard cap, and only then enter a window someone else opened.
-Reason: the peak is set by the worst piece, not the average one.
-
-**54. A measurement window opened with more consumers than the budget counted.**
-Rule: when a window opens, count every consumer of the shared device from scratch; stop what exceeds the budget before the window, and read the response time once in the first half hour.
-Reason: a budget written earlier does not know what started since.
-
-**55. Known warnings woke the owner at night.**
-Rule: a watcher acknowledges known items instead of skipping them; a silence list holds each known item with a reason and an expiry; an alert that returns under a new identity after each acknowledgement is a bug.
-Reason: a silence with no expiry hides the day the warning becomes real.
-
-**56. A branch needed by a fixed outside deadline waited in the queue behind load.**
-Rule: a branch tied to an outside deadline goes to the front, and the party waiting gets the fallback ("take it from the branch") at once. Never edit the head of the queue while its merge runs.
-Reason: the queue's order is about load, the deadline is about someone else's clock.
+## G. Publishing
 
 **57. A public text distilled from private sources carried results and near-translations.**
 The author's pattern scan said clean.
